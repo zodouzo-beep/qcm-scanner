@@ -1,102 +1,230 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QCM Scanner</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 10px; }
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        video { width: 100%; max-width: 400px; border: 3px solid #333; border-radius: 10px; }
-        input { font-size: 16px; padding: 10px; margin-bottom: 10px; width: 90%; max-width: 300px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 15px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; width: 90%; max-width: 300px; cursor: pointer; }
-        #resultat { margin-top: 15px; font-size: 20px; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QCM Scanner</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f9;
+      padding: 10px;
+      margin: 0;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin: 15px auto;
+      max-width: 500px;
+    }
+
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 3px solid #333;
+      border-radius: 10px;
+      background: #000;
+      margin-top: 10px;
+    }
+
+    input {
+      font-size: 16px;
+      padding: 10px;
+      margin: 8px 0;
+      width: 90%;
+      max-width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 18px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      width: 90%;
+      max-width: 300px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    #resultat {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      min-height: 30px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: gray;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Scanner de QCM</h1>
-    
-    <!-- ETAPE 1 : LE PROFESSEUR RENTRE LE CORRIGÉ -->
-    <div class="card" style="border-left: 5px solid #007bff;">
-        <h3>1. Configuration de l'examen</h3>
-        <p style="font-size: 12px; color: gray;">Tapez les bonnes réponses à la suite (ex: ACBDAB...)</p>
-        <input type="text" id="corrige_prof" placeholder="Ex: ACBDACBD..." value="ACBDACBDACBDACBDACBD">
-    </div>
+  <h1>Scanner de QCM</h1>
 
-    <!-- ETAPE 2 : LE PROFESSEUR SCANNE UN ÉLÈVE -->
-    <div class="card" style="border-left: 5px solid #28a745;">
-        <h3>2. Scanner une copie</h3>
-        <input type="text" id="nom_eleve" placeholder="Nom de l'élève (ex: Jean)">
-        <video id="video" autoplay playsinline></video>
-        <button id="btn-scan">📷 Corriger & Sauvegarder</button>
-        <div id="resultat"></div>
-    </div>
+  <!-- ETAPE 1 -->
+  <div class="card" style="border-left: 5px solid #007bff;">
+    <h3>1. Configuration de l'examen</h3>
+    <p class="hint">Tapez les bonnes réponses à la suite (ex: ACBDAB...)</p>
+    <input
+      type="text"
+      id="corrige_prof"
+      placeholder="Ex: ACBDACBD..."
+      value="ACBDACBDACBDACBDACBD"
+    />
+  </div>
 
-    <script>
-        // --- 1. CONFIGURATION SUPABASE (Laissez vos clés ici) ---
-        const supabaseUrl = "https://gnfaccqhvepkpoqvsnjq.supabase.co"; 
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduZmFjY3FodmVwa3BvcXZzbmpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMTk3NjUsImV4cCI6MjA4NzU5NTc2NX0.0hKHcnHX7Aj2yowc0r1GGAQIChLmJ3bv_YTnEUZGzeo"; 
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  <!-- ETAPE 2 -->
+  <div class="card" style="border-left: 5px solid #28a745;">
+    <h3>2. Scanner une copie</h3>
+    <input type="text" id="nom_eleve" placeholder="Nom de l'élève (ex: Jean)" />
+    <video id="video" autoplay playsinline muted></video>
+    <button id="btn-scan">📷 Corriger & Sauvegarder</button>
+    <div id="resultat"></div>
+  </div>
 
-        const video = document.getElementById('video');
-        const btnScan = document.getElementById('btn-scan');
-        const divResultat = document.getElementById('resultat');
-        const inputNom = document.getElementById('nom_eleve');
-        const inputCorrige = document.getElementById('corrige_prof');
+  <script>
+    // =========================
+    // 1) CONFIGURATION SUPABASE
+    // =========================
+    const supabaseUrl = "https://gnfaccqhvepkpoqvsnjq.supabase.co";
+    const supabaseKey = "VOTRE_CLE_ANON_ICI";
 
-        // Allumer la caméra
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => { divResultat.innerText = "Erreur caméra : " + err; });
+    // IMPORTANT : ne pas appeler la variable "supabase"
+    // car "window.supabase" est déjà le SDK chargé par le CDN.
+    const db = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- 2. LOGIQUE DE CORRECTION ---
-        btnScan.addEventListener('click', async () => {
-            const nomEleve = inputNom.value || "Anonyme";
-            const corrigeExamen = inputCorrige.value.toUpperCase(); // On récupère le corrigé du prof en majuscules
+    // =========================
+    // 2) ELEMENTS DOM
+    // =========================
+    const video = document.getElementById("video");
+    const btnScan = document.getElementById("btn-scan");
+    const divResultat = document.getElementById("resultat");
+    const inputNom = document.getElementById("nom_eleve");
+    const inputCorrige = document.getElementById("corrige_prof");
 
-            if (corrigeExamen.length === 0) {
-                alert("Veuillez d'abord entrer le corrigé !");
-                return;
-            }
+    let cameraStream = null;
 
-            divResultat.innerText = "Analyse de la copie...";
-            divResultat.style.color = "black";
+    function setResultat(message, color = "black") {
+      divResultat.innerText = message;
+      divResultat.style.color = color;
+    }
 
-            // ---------------------------------------------------------
-            // 🚨 ICI, PLUS TARD, OPENCV LIRA LA VRAIE COPIE.
-            // Pour l'instant, on simule que l'élève a répondu ça (avec 3 fautes) :
-            const reponsesEleveSimulees = "ACBDACBDACXDXCBDACBD"; 
-            // ---------------------------------------------------------
+    // =========================
+    // 3) DEMARRER CAMERA
+    // =========================
+    async function demarrerCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setResultat("Caméra non disponible (HTTPS ou navigateur requis).", "red");
+        return;
+      }
 
-            // --- 3. COMPARAISON ET NOTATION ---
-            let points = 0;
-            let questionsCorrigees = Math.min(corrigeExamen.length, reponsesEleveSimulees.length);
-
-            // On compare lettre par lettre
-            for (let i = 0; i < questionsCorrigees; i++) {
-                if (reponsesEleveSimulees[i] === corrigeExamen[i]) {
-                    points += 1; // Bonne réponse : +1 point
-                }
-            }
-
-            // --- 4. ENVOI À SUPABASE ---
-            const { data, error } = await supabase
-                .from('resultats')
-                .insert([
-                    { eleve_nom: nomEleve, note: points, total: questionsCorrigees }
-                ]);
-
-            if (error) {
-                divResultat.innerText = "Erreur de base de données.";
-                divResultat.style.color = "red";
-            } else {
-                divResultat.innerText = `✅ ${nomEleve} a eu : ${points} / ${questionsCorrigees}`;
-                divResultat.style.color = "green";
-                inputNom.value = ""; // On vide le nom pour passer à l'élève suivant
-            }
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false
         });
-    </script>
+        video.srcObject = cameraStream;
+      } catch (err) {
+        setResultat("Erreur caméra : " + err.message, "red");
+      }
+    }
+
+    demarrerCamera();
+
+    // =========================
+    // 4) NORMALISATION REPONSES
+    // =========================
+    function nettoyerReponses(texte) {
+      return (texte || "")
+        .toUpperCase()
+        .replace(/[^ABCD]/g, "");
+    }
+
+    // =========================
+    // 5) CORRECTION
+    // =========================
+    btnScan.addEventListener("click", async () => {
+      const nomEleve = inputNom.value.trim() || "Anonyme";
+      const corrigeExamen = nettoyerReponses(inputCorrige.value);
+
+      if (!corrigeExamen) {
+        alert("Veuillez d'abord entrer le corrigé !");
+        return;
+      }
+
+      btnScan.disabled = true;
+      setResultat("Analyse de la copie...", "black");
+
+      try {
+        // ---------------------------------------------------------
+        // Simulation temporaire
+        // Plus tard, cette variable viendra d'OpenCV / OCR
+        const reponsesEleveSimulees = nettoyerReponses("ACBDACBDACXDXCBDACBD");
+        // ---------------------------------------------------------
+
+        const questionsCorrigees = Math.min(
+          corrigeExamen.length,
+          reponsesEleveSimulees.length
+        );
+
+        let points = 0;
+
+        for (let i = 0; i < questionsCorrigees; i++) {
+          if (reponsesEleveSimulees[i] === corrigeExamen[i]) {
+            points += 1;
+          }
+        }
+
+        const { error } = await db
+          .from("resultats")
+          .insert([
+            {
+              eleve_nom: nomEleve,
+              note: points,
+              total: questionsCorrigees
+            }
+          ]);
+
+        if (error) {
+          console.error("Erreur Supabase :", error);
+          setResultat("Erreur de base de données : " + error.message, "red");
+          return;
+        }
+
+        setResultat(`✅ ${nomEleve} a eu : ${points} / ${questionsCorrigees}`, "green");
+        inputNom.value = "";
+      } catch (err) {
+        console.error("Erreur :", err);
+        setResultat("Erreur : " + err.message, "red");
+      } finally {
+        btnScan.disabled = false;
+      }
+    });
+
+    // =========================
+    // 6) NETTOYAGE CAMERA
+    // =========================
+    window.addEventListener("beforeunload", () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    });
+  </script>
 </body>
 </html>
